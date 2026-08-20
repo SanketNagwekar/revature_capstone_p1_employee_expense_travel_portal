@@ -20,21 +20,28 @@ def api_client():
             # Setup Users
             from werkzeug.security import generate_password_hash
             u_emp = User(username="api_emp", password_hash=generate_password_hash("pwd"), role="employee")
+            u_emp2 = User(username="api_emp2", password_hash=generate_password_hash("pwd"), role="employee")
             u_mgr = User(username="api_mgr", password_hash=generate_password_hash("pwd"), role="manager")
-            db.session.add_all([u_emp, u_mgr])
+            u_fin = User(username="api_fin", password_hash=generate_password_hash("pwd"), role="finance_admin")
+            db.session.add_all([u_emp, u_emp2, u_mgr, u_fin])
             db.session.commit()
             
             emp = Employee(user_id=u_emp.id, full_name="API Employee")
-            db.session.add(emp)
+            emp2 = Employee(user_id=u_emp2.id, full_name="API Employee 2")
+            db.session.add_all([emp, emp2])
             db.session.commit()
             
             from datetime import date
-            tr = TravelRequest(employee_id=emp.id, destination="API City", purpose="API Test", travel_date=date(2026,1,1), return_date=date(2026,1,2))
-            db.session.add(tr)
+            tr_appr = TravelRequest(employee_id=emp.id, destination="Valid", purpose="Test", travel_date=date(2026,1,1), return_date=date(2026,1,2), status="approved")
+            tr_unappr = TravelRequest(employee_id=emp.id, destination="Invalid", purpose="Test", travel_date=date(2026,1,1), return_date=date(2026,1,2), status="pending")
+            tr_other = TravelRequest(employee_id=emp2.id, destination="Other", purpose="Test", travel_date=date(2026,1,1), return_date=date(2026,1,2), status="approved")
+            db.session.add_all([tr_appr, tr_unappr, tr_other])
             db.session.commit()
             
             c = ExpenseClaim(employee_id=emp.id, title="API Claim", description="Testing", status="submitted")
-            db.session.add(c)
+            c_appr = ExpenseClaim(employee_id=emp.id, title="Appr Claim", description="Test", status="approved")
+            c_verif = ExpenseClaim(employee_id=emp.id, title="Verif Claim", description="Test", status="finance_verified")
+            db.session.add_all([c, c_appr, c_verif])
             db.session.commit()
             
         yield client
@@ -57,8 +64,7 @@ def test_api_get_claims(api_client):
     res = api_client.get("/api/claims")
     assert res.status_code == 200
     data = json.loads(res.data)
-    assert len(data) == 1
-    assert data[0]["title"] == "API Claim"
+    assert len(data) == 3
 
 def test_api_create_claim(api_client):
     api_client.post("/login", data={"username": "api_emp", "password": "pwd"})
@@ -76,3 +82,68 @@ def test_api_validation_failure(api_client):
     api_client.post("/login", data={"username": "api_emp", "password": "pwd"})
     res = api_client.post("/api/claims", json={"description": "Missing title"})
     assert res.status_code == 400
+
+# ── TR Validation Tests ──
+def test_create_claim_valid_tr(api_client):
+    api_client.post("/login", data={"username": "api_emp", "password": "pwd"})
+    res = api_client.post("/api/claims", json={"title": "TR Claim", "description": "Desc", "travel_request_id": 1})
+    assert res.status_code == 201
+
+def test_create_claim_nonexistent_tr(api_client):
+    api_client.post("/login", data={"username": "api_emp", "password": "pwd"})
+    res = api_client.post("/api/claims", json={"title": "Claim", "description": "Desc", "travel_request_id": 999})
+    assert res.status_code == 404
+
+def test_create_claim_other_employee_tr(api_client):
+    api_client.post("/login", data={"username": "api_emp", "password": "pwd"})
+    res = api_client.post("/api/claims", json={"title": "Claim", "description": "Desc", "travel_request_id": 3})
+    assert res.status_code == 403
+
+def test_create_claim_unapproved_tr(api_client):
+    api_client.post("/login", data={"username": "api_emp", "password": "pwd"})
+    res = api_client.post("/api/claims", json={"title": "Claim", "description": "Desc", "travel_request_id": 2})
+    assert res.status_code == 400
+
+# ── Finance Verification Tests ──
+def test_verify_claim_success(api_client):
+    api_client.post("/login", data={"username": "api_fin", "password": "pwd"})
+    res = api_client.post("/api/claims/2/verify", json={"comments": "Looks good"})
+    assert res.status_code == 200
+
+def test_verify_claim_unauthorized(api_client):
+    api_client.post("/login", data={"username": "api_mgr", "password": "pwd"})
+    res = api_client.post("/api/claims/2/verify", json={"comments": "Looks good"})
+    assert res.status_code == 403
+
+def test_verify_claim_invalid_state(api_client):
+    api_client.post("/login", data={"username": "api_fin", "password": "pwd"})
+    res = api_client.post("/api/claims/1/verify", json={"comments": "Looks good"})
+    assert res.status_code == 400 # 1 is 'submitted'
+
+def test_verify_claim_duplicate(api_client):
+    api_client.post("/login", data={"username": "api_fin", "password": "pwd"})
+    res = api_client.post("/api/claims/3/verify", json={"comments": "Looks good"})
+    assert res.status_code == 400 # 3 is 'finance_verified'
+
+# ── Finance Reimbursement Tests ──
+def test_reimburse_claim_success(api_client):
+    api_client.post("/login", data={"username": "api_fin", "password": "pwd"})
+    res = api_client.post("/api/claims/3/reimburse", json={})
+    assert res.status_code == 200
+
+def test_reimburse_claim_unauthorized(api_client):
+    api_client.post("/login", data={"username": "api_mgr", "password": "pwd"})
+    res = api_client.post("/api/claims/3/reimburse", json={})
+    assert res.status_code == 403
+
+def test_reimburse_claim_before_verification(api_client):
+    api_client.post("/login", data={"username": "api_fin", "password": "pwd"})
+    res = api_client.post("/api/claims/2/reimburse", json={})
+    assert res.status_code == 400 # 2 is 'approved'
+
+def test_reimburse_claim_duplicate(api_client):
+    api_client.post("/login", data={"username": "api_fin", "password": "pwd"})
+    res = api_client.post("/api/claims/3/reimburse", json={})
+    assert res.status_code == 200
+    res2 = api_client.post("/api/claims/3/reimburse", json={})
+    assert res2.status_code == 400

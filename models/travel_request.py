@@ -17,6 +17,9 @@ class TravelRequest(db.Model):
     employee = db.relationship("Employee", back_populates="travel_requests")
     expense_claims = db.relationship("ExpenseClaim", back_populates="travel_request")
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def to_dict(self):
         return {
             "id": self.id,

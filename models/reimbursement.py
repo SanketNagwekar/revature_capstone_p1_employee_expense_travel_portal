@@ -17,6 +17,9 @@ class Reimbursement(db.Model):
     claim = db.relationship("ExpenseClaim", back_populates="reimbursement")
     finance_user = db.relationship("User")
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def to_dict(self):
         return {
             "id": self.id,

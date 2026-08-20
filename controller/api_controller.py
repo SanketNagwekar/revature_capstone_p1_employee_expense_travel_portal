@@ -59,12 +59,16 @@ def create_travel_request():
         
     data = request.get_json() or {}
     try:
+        from datetime import datetime
+        travel_date = datetime.strptime(data.get("travel_date"), "%Y-%m-%d").date() if data.get("travel_date") else None
+        return_date = datetime.strptime(data.get("return_date"), "%Y-%m-%d").date() if data.get("return_date") else None
+        
         tr = travel_service.create_request(
             employee_id=get_employee_id(),
             destination=data.get("destination"),
             purpose=data.get("purpose"),
-            travel_date_str=data.get("travel_date"),
-            return_date_str=data.get("return_date"),
+            travel_date=travel_date,
+            return_date=return_date,
             estimated_cost=data.get("estimated_cost")
         )
         return jsonify(tr.to_dict()), 201
@@ -112,6 +116,18 @@ def create_claim():
         return jsonify({"error": "Unauthorized"}), 403
         
     data = request.get_json() or {}
+    
+    tr_id = data.get("travel_request_id")
+    if tr_id:
+        try:
+            tr = travel_service.get_by_id(tr_id)
+            if tr.employee_id != get_employee_id():
+                return jsonify({"error": "Travel request belongs to another employee"}), 403
+            if tr.status != "approved":
+                return jsonify({"error": "Travel request must be approved"}), 400
+        except ValueError:
+            return jsonify({"error": "Travel request not found"}), 404
+            
     try:
         claim = expense_service.create_claim(
             employee_id=get_employee_id(),
@@ -147,3 +163,41 @@ def get_reimbursements():
         
     reimbursements = finance_service.get_all_reimbursements()
     return jsonify([r.to_dict() for r in reimbursements]), 200
+
+@api_controller.route("/claims/<int:claim_id>/verify", methods=["POST"])
+def verify_claim(claim_id):
+    auth_err = require_auth()
+    if auth_err: return auth_err
+    
+    if get_role() != "finance_admin":
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    data = request.get_json() or {}
+    comments = data.get("comments", "Verified via API")
+    
+    try:
+        claim = finance_service.verify_claim(claim_id, get_user_id(), comments)
+        return jsonify(claim.to_dict()), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+@api_controller.route("/claims/<int:claim_id>/reimburse", methods=["POST"])
+def reimburse_claim(claim_id):
+    auth_err = require_auth()
+    if auth_err: return auth_err
+    
+    if get_role() != "finance_admin":
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    data = request.get_json() or {}
+    payment_method = data.get("payment_method", "Direct Deposit")
+    transaction_reference = data.get("transaction_reference", "TX-API")
+    notes = data.get("notes", "Processed via API")
+    
+    try:
+        reimbursement = finance_service.process_reimbursement(
+            claim_id, get_user_id(), payment_method, transaction_reference, notes
+        )
+        return jsonify(reimbursement.to_dict()), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
