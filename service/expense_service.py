@@ -80,8 +80,9 @@ class ExpenseService:
             raise ValueError("Only draft claims can be submitted")
         if not claim.expense_items:
             raise ValueError("Cannot submit a claim with no items")
+        import datetime as dt
         claim.status = "submitted"
-        claim.submitted_at = datetime.utcnow()
+        claim.submitted_at = dt.datetime.now(dt.UTC)
         return self.claim_dao.save(claim)
 
     def approve_claim(self, claim_id, reviewer_id, comments):
