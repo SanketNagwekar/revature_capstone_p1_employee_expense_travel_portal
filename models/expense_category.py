@@ -1,0 +1,18 @@
+from config.database import db
+
+class ExpenseCategory(db.Model):
+    __tablename__ = "expense_categories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255))
+
+    expense_items = db.relationship("ExpenseItem", back_populates="category")
+    policies = db.relationship("ExpensePolicy", back_populates="category")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description
+        }
