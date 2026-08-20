@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}My Expense Claims - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>My Expense Claims</h1>
+</div>
+
+<div class="card">
+    <!-- Filter bar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px">
+        <form method="GET" action="/expense/my-claims" style="display:flex; gap:8px; align-items:center">
+            <label style="font-weight:bold; font-size:0.9rem">Filter by Status:</label>
+            <select name="status" onchange="this.form.submit()" style="padding:6px 10px; border:1px solid #ccc; border-radius:4px">
+                <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+                <option value="draft"       {% if status_filter == "draft" %}selected{% endif %}>Draft</option>
+                <option value="submitted"   {% if status_filter == "submitted" %}selected{% endif %}>Submitted</option>
+                <option value="approved"    {% if status_filter == "approved" %}selected{% endif %}>Approved</option>
+                <option value="rejected"    {% if status_filter == "rejected" %}selected{% endif %}>Rejected</option>
+                <option value="reimbursed"  {% if status_filter == "reimbursed" %}selected{% endif %}>Reimbursed</option>
+            </select>
+        </form>
+        <a href="/expense/new" class="btn btn-primary">+ New Claim</a>
+    </div>
+
+    {% if claims %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Submitted On</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in claims %}
+            <tr>
+                <td>{{ c.id }}</td>
+                <td>{{ c.title }}</td>
+                <td>{{ "%.2f"|format(c.total_amount) }}</td>
+                <td><span class="badge badge-{{ c.status }}">{{ c.status }}</span></td>
+                <td>{{ c.submitted_at.strftime("%d %b %Y") if c.submitted_at else "-" }}</td>
+                <td><a href="/expense/{{ c.id }}" class="btn btn-secondary btn-sm">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="color:#666; text-align:center; padding:20px">No claims found. <a href="/expense/new">Create your first claim</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Claim Details - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>{{ claim.title }}</h1>
+    <p>
+        Status: <span class="badge badge-{{ claim.status }}">{{ claim.status }}</span>
+        &nbsp;&nbsp; Total: <strong>{{ "%.2f"|format(claim.total_amount) }}</strong>
+        {% if claim.submitted_at %}
+            &nbsp;&nbsp; Submitted: {{ claim.submitted_at.strftime("%d %b %Y") }}
+        {% endif %}
+    </p>
+</div>
+
+<!-- Submit / info banner -->
+{% if submit_error %}
+    <div class="alert alert-error">{{ submit_error }}</div>
+{% endif %}
+
+{% if claim.status == "draft" %}
+<div class="alert alert-info">
+    This claim is a <strong>draft</strong>. Add your expense items below, then click <em>Submit for Approval</em>.
+</div>
+{% elif claim.status == "approved" %}
+<div class="alert alert-success">Your claim has been approved and is pending reimbursement.</div>
+{% elif claim.status == "rejected" %}
+<div class="alert alert-error">Your claim was rejected. See approval history below for details.</div>
+{% elif claim.status == "reimbursed" %}
+<div class="alert alert-success">This claim has been reimbursed.</div>
+{% endif %}
+
+<!-- Expense Items -->
+<div class="card">
+    <h2>Expense Items</h2>
+
+    {% if item_error %}
+        <div class="alert alert-error">{{ item_error }}</div>
+    {% endif %}
+
+    {% if claim.expense_items %}
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Amount</th>
+                {% if claim.status == "draft" %}<th>Actions</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in claim.expense_items %}
+            <tr>
+                <td>{{ item.category.name if item.category else "-" }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.expense_date }}</td>
+                <td>{{ "%.2f"|format(item.amount) }}</td>
+                {% if claim.status == "draft" %}
+                <td>
+                    <form method="POST" action="/expense/{{ claim.id }}/delete-item/{{ item.id }}" style="display:inline" onsubmit="return confirm('Remove this item?')">
+                        <button class="btn btn-danger btn-sm" type="submit">Remove</button>
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="text-align:right; margin-top:8px; font-weight:bold">
+        Total: {{ "%.2f"|format(claim.total_amount) }}
+    </div>
+    {% else %}
+        <p style="color:#666">No items added yet.</p>
+    {% endif %}
+
+    <!-- Add Item Form (only for draft) -->
+    {% if claim.status == "draft" %}
+    <hr style="margin:20px 0; border-color:#e0e0e0">
+    <h2>Add Expense Item</h2>
+    <form method="POST" action="/expense/{{ claim.id }}/add-item" style="max-width:500px">
+        <div class="form-group">
+            <label>Category</label>
+            <select name="category_id" required>
+                <option value="">-- Select Category --</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" name="description" placeholder="e.g. Taxi to airport">
+        </div>
+        <div class="form-group">
+            <label>Date of Expense</label>
+            <input type="date" name="expense_date" required>
+        </div>
+        <div class="form-group">
+            <label>Amount</label>
+            <input type="number" name="amount" step="0.01" min="0.01" placeholder="0.00" required>
+        </div>
+        <button type="submit" class="btn btn-success">Add Item</button>
+    </form>
+    {% endif %}
+</div>
+
+<!-- Submit for Approval -->
+{% if claim.status == "draft" %}
+<div class="card">
+    <h2>Submit Claim</h2>
+    <p style="color:#666; margin-bottom:12px">Once submitted, you cannot edit items. The claim will go for manager approval.</p>
+    <form method="POST" action="/expense/{{ claim.id }}/submit" onsubmit="return confirm('Submit this claim for approval?')">
+        <button type="submit" class="btn btn-primary">Submit for Approval</button>
+        &nbsp;
+        <a href="/expense/my-claims" class="btn btn-secondary">Back to Claims</a>
+    </form>
+</div>
+{% else %}
+<div class="mt-16">
+    <a href="/expense/my-claims" class="btn btn-secondary">Back to Claims</a>
+</div>
+{% endif %}
+
+<!-- Approval History -->
+{% if history %}
+<div class="card">
+    <h2>Approval History</h2>
+    <table>
+        <thead>
+            <tr><th>Action</th><th>By</th><th>Comments</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for h in history %}
+            <tr>
+                <td><span class="badge badge-{{ h.action }}">{{ h.action }}</span></td>
+                <td>{{ h.reviewer.username if h.reviewer else "-" }}</td>
+                <td>{{ h.comments or "-" }}</td>
+                <td>{{ h.action_date.strftime("%d %b %Y %H:%M") }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

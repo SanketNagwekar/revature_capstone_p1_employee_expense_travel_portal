@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}New Expense Claim - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>New Expense Claim</h1>
+    <p>Create a claim and add your expense items in the next step</p>
+</div>
+
+<div class="card" style="max-width:560px">
+    {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/expense/new">
+        <div class="form-group">
+            <label for="title">Claim Title</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Mumbai Trip - Aug 2026" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description (optional)</label>
+            <textarea id="description" name="description" placeholder="Brief description of this expense claim..."></textarea>
+        </div>
+        <div class="form-group">
+            <label for="travel_request_id">Link to Approved Travel Request (optional)</label>
+            <select id="travel_request_id" name="travel_request_id">
+                <option value="">-- None --</option>
+                {% for t in travels %}
+                    <option value="{{ t.id }}">{{ t.destination }} ({{ t.travel_date }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Claim &rarr;</button>
+        &nbsp;
+        <a href="/employee/dashboard" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
