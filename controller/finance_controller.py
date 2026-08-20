@@ -27,12 +27,40 @@ category_dao = ExpenseCategoryDAO()
 @role_required("finance_admin")
 def dashboard():
     approved_claims = expense_service.get_by_status("approved")
+    verified_claims = expense_service.get_by_status("finance_verified")
     recent_reimbursements = finance_service.get_all_reimbursements()[:10]
     return render_template(
         "finance/dashboard.html",
         approved_claims=approved_claims,
+        verified_claims=verified_claims,
         recent_reimbursements=recent_reimbursements
     )
+
+@finance_controller.route("/verify/<int:claim_id>", methods=["GET", "POST"])
+@role_required("finance_admin")
+def verify_claim(claim_id):
+    try:
+        claim = expense_service.get_by_id(claim_id)
+    except ValueError:
+        return redirect("/finance/dashboard")
+        
+    if claim.status != "approved":
+        return redirect("/finance/dashboard")
+
+    if request.method == "GET":
+        history = expense_service.get_history(claim_id)
+        categories = category_dao.get_all()
+        return render_template("finance/verify_claim.html", claim=claim, history=history, categories=categories)
+        
+    comments = request.form.get("comments")
+    try:
+        finance_service.verify_claim(claim_id, session.get("user_id"), comments)
+    except ValueError as e:
+        history = expense_service.get_history(claim_id)
+        categories = category_dao.get_all()
+        return render_template("finance/verify_claim.html", claim=claim, history=history, categories=categories, error=str(e))
+        
+    return redirect("/finance/dashboard")
 
 @finance_controller.route("/process/<int:claim_id>", methods=["GET", "POST"])
 @role_required("finance_admin")
@@ -42,7 +70,7 @@ def process_claim(claim_id):
     except ValueError:
         return redirect("/finance/dashboard")
         
-    if claim.status != "approved":
+    if claim.status != "finance_verified":
         return redirect("/finance/dashboard")
 
     if request.method == "GET":

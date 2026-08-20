@@ -105,6 +105,8 @@ class ExpenseService:
         return claim
 
     def reject_claim(self, claim_id, reviewer_id, comments):
+        if not comments or not comments.strip():
+            raise ValueError("Comments are required for rejection")
         claim = self.get_by_id(claim_id)
         if claim.status != "submitted":
             raise ValueError("Only submitted claims can be rejected")

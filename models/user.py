@@ -11,7 +11,8 @@ class User(db.Model):
 
     employee = db.relationship("Employee", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
-    def __init__(self, username, password_hash, role, is_active=True):
+    def __init__(self, username, password_hash, role, is_active=True, **kwargs):
+        super().__init__(**kwargs)
         self.username = username
         self.password_hash = password_hash
         self.role = role

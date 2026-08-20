@@ -11,13 +11,36 @@ class FinanceService:
     def get_all_reimbursements(self):
         return self.reimbursement_dao.get_all()
 
+    def verify_claim(self, claim_id, finance_user_id, comments):
+        claim = self.claim_dao.get_by_id(claim_id)
+        if claim is None:
+            raise ValueError("Claim not found")
+            
+        if claim.status == "finance_verified":
+            raise ValueError("Claim is already verified")
+            
+        if claim.status != "approved":
+            raise ValueError("Only approved claims can be finance-verified")
+            
+        claim.status = "finance_verified"
+        self.claim_dao.save(claim)
+        
+        history = ApprovalHistory(
+            claim_id=claim_id,
+            reviewer_id=finance_user_id,
+            action="finance_verified",
+            comments=comments
+        )
+        self.history_dao.save(history)
+        return claim
+
     def process_reimbursement(self, claim_id, finance_user_id, payment_method, transaction_reference, notes):
         claim = self.claim_dao.get_by_id(claim_id)
         if claim is None:
             raise ValueError("Claim not found")
         
-        if claim.status != "approved":
-            raise ValueError("Only approved claims can be reimbursed")
+        if claim.status != "finance_verified":
+            raise ValueError("Only verified claims can be reimbursed")
         
         if self.reimbursement_dao.get_by_claim(claim_id):
             raise ValueError("Claim has already been reimbursed")

@@ -62,4 +62,5 @@ def test_client():
             db.session.commit()
             
             yield client
+            db.session.remove()
             db.drop_all()
