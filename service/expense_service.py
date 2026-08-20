@@ -116,3 +116,28 @@ class ExpenseService:
 
     def get_history(self, claim_id):
         return self.history_dao.get_by_claim(claim_id)
+
+    def upload_receipt(self, item_id, filename, file_path):
+        item = self.item_dao.get_by_id(item_id)
+        if item is None:
+            raise ValueError("Expense item not found")
+        receipt = ExpenseReceipt(item_id=item_id, filename=filename, file_path=file_path)
+        return self.receipt_dao.save(receipt)
+
+    def get_receipts_for_item(self, item_id):
+        return self.receipt_dao.get_by_item(item_id)
+
+    def get_receipt_by_id(self, receipt_id):
+        receipt = self.receipt_dao.get_by_id(receipt_id)
+        if receipt is None:
+            raise ValueError("Receipt not found")
+        return receipt
+
+    def delete_receipt(self, receipt_id):
+        receipt = self.receipt_dao.get_by_id(receipt_id)
+        if receipt is None:
+            raise ValueError("Receipt not found")
+        import os
+        if os.path.exists(receipt.file_path):
+            os.remove(receipt.file_path)
+        self.receipt_dao.delete(receipt)

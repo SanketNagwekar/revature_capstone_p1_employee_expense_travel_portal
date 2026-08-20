@@ -46,6 +46,7 @@
                 <th>Description</th>
                 <th>Date</th>
                 <th>Amount</th>
+                <th>Receipts</th>
                 {% if claim.status == "draft" %}<th>Actions</th>{% endif %}
             </tr>
         </thead>
@@ -56,6 +57,26 @@
                 <td>{{ item.description }}</td>
                 <td>{{ item.expense_date }}</td>
                 <td>{{ "%.2f"|format(item.amount) }}</td>
+                <td>
+                    {% for r in item.receipts %}
+                        <a href="/expense/receipt/{{ r.id }}/download" class="btn btn-secondary btn-sm">
+                            {{ r.filename[:20] }}{% if r.filename|length > 20 %}...{% endif %}
+                        </a>
+                        {% if claim.status == "draft" %}
+                        <form method="POST" action="/expense/{{ claim.id }}/delete-receipt/{{ r.id }}" style="display:inline" onsubmit="return confirm('Remove receipt?')">
+                            <button class="btn btn-danger btn-sm" type="submit">x</button>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                        <span style="color:#999; font-size:0.85rem">None</span>
+                    {% endfor %}
+                    {% if claim.status == "draft" %}
+                    <form method="POST" action="/expense/{{ claim.id }}/upload-receipt/{{ item.id }}" enctype="multipart/form-data" style="margin-top:4px; display:flex; gap:4px; align-items:center">
+                        <input type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png,.gif" style="font-size:0.8rem; max-width:160px">
+                        <button type="submit" class="btn btn-success btn-sm">Upload</button>
+                    </form>
+                    {% endif %}
+                </td>
                 {% if claim.status == "draft" %}
                 <td>
                     <form method="POST" action="/expense/{{ claim.id }}/delete-item/{{ item.id }}" style="display:inline" onsubmit="return confirm('Remove this item?')">

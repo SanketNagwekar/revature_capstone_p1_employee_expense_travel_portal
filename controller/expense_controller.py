@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, redirect, session
+from flask import Blueprint, request, render_template, redirect, session, send_from_directory, current_app
 from service.expense_service import ExpenseService
 from service.travel_service import TravelService
 from dao.expense_claim_dao import ExpenseClaimDAO
@@ -10,6 +10,13 @@ from dao.expense_category_dao import ExpenseCategoryDAO
 from dao.travel_request_dao import TravelRequestDAO
 from utils import role_required
 from datetime import datetime
+import os
+import uuid
+
+ALLOWED_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "gif"}
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 expense_controller = Blueprint("expense_controller", __name__, url_prefix="/expense")
 
@@ -104,3 +111,61 @@ def submit_claim(claim_id):
         history = expense_service.get_history(claim_id)
         return render_template("employee/claim_details.html", claim=claim, categories=categories, history=history, submit_error=str(e))
     return redirect("/expense/my-claims")
+
+
+@expense_controller.route("/<int:claim_id>/upload-receipt/<int:item_id>", methods=["POST"])
+@role_required("employee")
+def upload_receipt(claim_id, item_id):
+    file = request.files.get("receipt")
+    if not file or file.filename == "":
+        claim = expense_service.get_by_id(claim_id)
+        categories = category_dao.get_all()
+        history = expense_service.get_history(claim_id)
+        return render_template("employee/claim_details.html", claim=claim, categories=categories, history=history, item_error="No file selected")
+
+    if not allowed_file(file.filename):
+        claim = expense_service.get_by_id(claim_id)
+        categories = category_dao.get_all()
+        history = expense_service.get_history(claim_id)
+        return render_template("employee/claim_details.html", claim=claim, categories=categories, history=history, item_error="Invalid file type. Allowed: PDF, JPG, PNG, GIF")
+
+    ext = file.filename.rsplit(".", 1)[1].lower()
+    unique_filename = f"{uuid.uuid4().hex}.{ext}"
+    upload_folder = current_app.config["UPLOAD_FOLDER"]
+    os.makedirs(upload_folder, exist_ok=True)
+    file_path = os.path.join(upload_folder, unique_filename)
+    file.save(file_path)
+
+    try:
+        expense_service.upload_receipt(item_id, file.filename, file_path)
+    except ValueError as e:
+        os.remove(file_path)
+        claim = expense_service.get_by_id(claim_id)
+        categories = category_dao.get_all()
+        history = expense_service.get_history(claim_id)
+        return render_template("employee/claim_details.html", claim=claim, categories=categories, history=history, item_error=str(e))
+
+    return redirect(f"/expense/{claim_id}")
+
+
+@expense_controller.route("/receipt/<int:receipt_id>/download")
+@role_required("employee", "manager", "finance_admin", "system_admin")
+def download_receipt(receipt_id):
+    try:
+        receipt = expense_service.get_receipt_by_id(receipt_id)
+    except ValueError:
+        return redirect("/login")
+
+    folder = os.path.dirname(receipt.file_path)
+    filename = os.path.basename(receipt.file_path)
+    return send_from_directory(folder, filename, as_attachment=True, download_name=receipt.filename)
+
+
+@expense_controller.route("/<int:claim_id>/delete-receipt/<int:receipt_id>", methods=["POST"])
+@role_required("employee")
+def delete_receipt(claim_id, receipt_id):
+    try:
+        expense_service.delete_receipt(receipt_id)
+    except ValueError:
+        pass
+    return redirect(f"/expense/{claim_id}")

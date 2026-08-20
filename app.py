@@ -10,6 +10,8 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 init_db(app)
+app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(__file__), "static", "uploads")
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB
 
 from models.user import User
 from models.employee import Employee
