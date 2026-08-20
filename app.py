@@ -22,6 +22,9 @@ from models.expense_receipt import ExpenseReceipt
 from models.approval_history import ApprovalHistory
 from models.reimbursement import Reimbursement
 
+from controller.auth_controller import auth_controller
+app.register_blueprint(auth_controller)
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

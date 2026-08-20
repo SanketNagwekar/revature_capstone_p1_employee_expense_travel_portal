@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Expense Portal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+{% if session.user_id %}
+<nav class="navbar">
+    <a class="brand" href="/">Expense & Travel Portal</a>
+    <div class="nav-links">
+        {% if session.role == "employee" %}
+            <a href="/employee/dashboard">Dashboard</a>
+            <a href="/travel/new">Travel Request</a>
+            <a href="/expense/new">New Claim</a>
+            <a href="/expense/my-claims">My Claims</a>
+        {% elif session.role == "manager" %}
+            <a href="/manager/dashboard">Dashboard</a>
+        {% elif session.role == "finance_admin" %}
+            <a href="/finance/dashboard">Dashboard</a>
+        {% elif session.role == "system_admin" %}
+            <a href="/admin/dashboard">Dashboard</a>
+        {% endif %}
+        <a href="/logout">Logout ({{ session.username }})</a>
+    </div>
+</nav>
+{% endif %}
+
+<div {% if not session.user_id %}{% else %}class="container-wide"{% endif %}>
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>
