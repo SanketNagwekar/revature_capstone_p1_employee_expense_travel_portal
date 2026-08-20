@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}My Travel Requests - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>My Travel Requests</h1>
+</div>
+
+<div class="card">
+    <div class="text-right" style="margin-bottom:12px">
+        <a href="/travel/new" class="btn btn-primary">+ New Request</a>
+    </div>
+
+    {% if travel_requests %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Destination</th>
+                <th>Purpose</th>
+                <th>Travel Date</th>
+                <th>Return Date</th>
+                <th>Est. Cost</th>
+                <th>Status</th>
+                <th>Submitted</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tr in travel_requests %}
+            <tr>
+                <td>{{ tr.id }}</td>
+                <td>{{ tr.destination }}</td>
+                <td>{{ tr.purpose[:60] }}{% if tr.purpose|length > 60 %}...{% endif %}</td>
+                <td>{{ tr.travel_date }}</td>
+                <td>{{ tr.return_date }}</td>
+                <td>{{ "%.2f"|format(tr.estimated_cost) if tr.estimated_cost else "-" }}</td>
+                <td><span class="badge badge-{{ tr.status }}">{{ tr.status }}</span></td>
+                <td>{{ tr.created_at.strftime("%d %b %Y") }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="color:#666">No travel requests found. <a href="/travel/new">Submit one</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

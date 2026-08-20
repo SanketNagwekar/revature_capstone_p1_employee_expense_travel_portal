@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>Welcome, {{ employee.full_name }}</h1>
+    <p>{{ employee.designation }} &mdash; {{ employee.department }}</p>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.travel_pending }}</div>
+        <div class="stat-label">Pending Travel Requests</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.travel_approved }}</div>
+        <div class="stat-label">Approved Travel</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.claims_submitted }}</div>
+        <div class="stat-label">Claims Submitted</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.claims_approved }}</div>
+        <div class="stat-label">Claims Approved</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.reimbursed }}</div>
+        <div class="stat-label">Reimbursed</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <h2>Quick Actions</h2>
+    <a href="/travel/new" class="btn btn-primary">+ New Travel Request</a>
+    &nbsp;
+    <a href="/expense/new" class="btn btn-success">+ New Expense Claim</a>
+    &nbsp;
+    <a href="/expense/my-claims" class="btn btn-secondary">View All Claims</a>
+</div>
+
+<!-- Recent Travel Requests -->
+<div class="card">
+    <h2>Recent Travel Requests</h2>
+    {% if recent_travel %}
+    <table>
+        <thead>
+            <tr><th>Destination</th><th>Travel Date</th><th>Return Date</th><th>Est. Cost</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for tr in recent_travel %}
+            <tr>
+                <td>{{ tr.destination }}</td>
+                <td>{{ tr.travel_date }}</td>
+                <td>{{ tr.return_date }}</td>
+                <td>{{ tr.estimated_cost if tr.estimated_cost else "-" }}</td>
+                <td><span class="badge badge-{{ tr.status }}">{{ tr.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="color:#666">No travel requests yet. <a href="/travel/new">Create one</a>.</p>
+    {% endif %}
+</div>
+
+<!-- Recent Claims -->
+<div class="card">
+    <h2>Recent Expense Claims</h2>
+    {% if recent_claims %}
+    <table>
+        <thead>
+            <tr><th>Title</th><th>Total Amount</th><th>Status</th><th>Submitted</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for c in recent_claims %}
+            <tr>
+                <td>{{ c.title }}</td>
+                <td>{{ "%.2f"|format(c.total_amount) }}</td>
+                <td><span class="badge badge-{{ c.status }}">{{ c.status }}</span></td>
+                <td>{{ c.submitted_at.strftime("%d %b %Y") if c.submitted_at else "-" }}</td>
+                <td><a href="/expense/{{ c.id }}" class="btn btn-secondary btn-sm">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="color:#666">No expense claims yet. <a href="/expense/new">Create one</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}
