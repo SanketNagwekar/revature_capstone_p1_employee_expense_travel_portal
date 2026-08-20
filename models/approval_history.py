@@ -14,6 +14,12 @@ class ApprovalHistory(db.Model):
     claim = db.relationship("ExpenseClaim", back_populates="approval_history")
     reviewer = db.relationship("User")
 
+    def __init__(self, claim_id, reviewer_id, action, comments=None):
+        self.claim_id = claim_id
+        self.reviewer_id = reviewer_id
+        self.action = action
+        self.comments = comments
+
     def to_dict(self):
         return {
             "id": self.id,

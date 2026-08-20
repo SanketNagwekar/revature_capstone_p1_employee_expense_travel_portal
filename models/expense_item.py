@@ -14,6 +14,19 @@ class ExpenseItem(db.Model):
     category = db.relationship("ExpenseCategory", back_populates="expense_items")
     receipts = db.relationship("ExpenseReceipt", back_populates="item")
 
+    def __init__(self, claim_id=None, category_id=None, description=None, amount=None, expense_date=None, **kwargs):
+        super().__init__(**kwargs)
+        if claim_id is not None:
+            self.claim_id = claim_id
+        if category_id is not None:
+            self.category_id = category_id
+        if description is not None:
+            self.description = description
+        if amount is not None:
+            self.amount = amount
+        if expense_date is not None:
+            self.expense_date = expense_date
+
     def to_dict(self):
         return {
             "id": self.id,

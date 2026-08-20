@@ -22,7 +22,7 @@ def finance_service(reimbursement_dao_mock, claim_dao_mock, history_dao_mock):
     return FinanceService(reimbursement_dao_mock, claim_dao_mock, history_dao_mock)
 
 def test_reimbursement_succeeds(finance_service, reimbursement_dao_mock, claim_dao_mock, history_dao_mock):
-    mock_claim = ExpenseClaim(id=1, status="approved", total_amount=500.0)
+    mock_claim = ExpenseClaim(id=1, status="approved", total_amount=500.0)  # type: ignore          
     claim_dao_mock.get_by_id.return_value = mock_claim
     reimbursement_dao_mock.get_by_claim.return_value = None
     
@@ -47,11 +47,11 @@ def test_reimbursement_succeeds(finance_service, reimbursement_dao_mock, claim_d
     history_dao_mock.save.assert_called_once()
 
 def test_duplicate_reimbursement_rejected(finance_service, reimbursement_dao_mock, claim_dao_mock):
-    mock_claim = ExpenseClaim(id=1, status="approved", total_amount=500.0)
+    mock_claim = ExpenseClaim(id=1, status="approved", total_amount=500.0)  # type: ignore
     claim_dao_mock.get_by_id.return_value = mock_claim
     
     # Simulate already reimbursed
-    reimbursement_dao_mock.get_by_claim.return_value = Reimbursement(id=1)
+    reimbursement_dao_mock.get_by_claim.return_value = Reimbursement(id=1)  # type: ignore
     
     with pytest.raises(ValueError, match="Claim has already been reimbursed"):
         finance_service.process_reimbursement(
@@ -63,7 +63,7 @@ def test_duplicate_reimbursement_rejected(finance_service, reimbursement_dao_moc
         )
 
 def test_unapproved_claim_rejected(finance_service, claim_dao_mock):
-    mock_claim = ExpenseClaim(id=1, status="submitted", total_amount=500.0)
+    mock_claim = ExpenseClaim(id=1, status="submitted", total_amount=500.0)  # type: ignore
     claim_dao_mock.get_by_id.return_value = mock_claim
     
     with pytest.raises(ValueError, match="Only approved claims can be reimbursed"):

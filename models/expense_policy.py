@@ -10,6 +10,11 @@ class ExpensePolicy(db.Model):
 
     category = db.relationship("ExpenseCategory", back_populates="policies")
 
+    def __init__(self, category_id, max_amount, description=None):
+        self.category_id = category_id
+        self.max_amount = max_amount
+        self.description = description
+
     def to_dict(self):
         return {
             "id": self.id,

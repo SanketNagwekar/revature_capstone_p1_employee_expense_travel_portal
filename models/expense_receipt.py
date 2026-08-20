@@ -12,6 +12,13 @@ class ExpenseReceipt(db.Model):
 
     item = db.relationship("ExpenseItem", back_populates="receipts")
 
+    def __init__(self, item_id, filename, file_path, uploaded_at=None):
+        self.item_id = item_id
+        self.filename = filename
+        self.file_path = file_path
+        if uploaded_at:
+            self.uploaded_at = uploaded_at
+
     def to_dict(self):
         return {
             "id": self.id,

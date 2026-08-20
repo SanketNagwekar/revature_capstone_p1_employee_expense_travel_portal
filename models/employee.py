@@ -14,6 +14,14 @@ class Employee(db.Model):
     travel_requests = db.relationship("TravelRequest", back_populates="employee")
     expense_claims = db.relationship("ExpenseClaim", back_populates="employee")
 
+    def __init__(self, user_id, full_name, department=None, designation=None, phone=None):
+        self.user_id = user_id
+        self.full_name = full_name
+        self.department = department
+        self.designation = designation
+        self.phone = phone
+
+
     def to_dict(self):
         return {
             "id": self.id,

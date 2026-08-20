@@ -31,23 +31,32 @@ def test_client():
             from werkzeug.security import generate_password_hash
             
             # Setup users
-            user_emp1 = User(id=1, username="emp1", password_hash=generate_password_hash("pass"), role="employee")
-            emp1 = Employee(id=1, user_id=1, full_name="Employee One")
+            user_emp1 = User(username="emp1", password_hash=generate_password_hash("pass"), role="employee")
+            user_emp1.id = 1
+            emp1 = Employee(user_id=1, full_name="Employee One")
+            emp1.id = 1
             
-            user_emp2 = User(id=2, username="emp2", password_hash=generate_password_hash("pass"), role="employee")
-            emp2 = Employee(id=2, user_id=2, full_name="Employee Two")
+            user_emp2 = User(username="emp2", password_hash=generate_password_hash("pass"), role="employee")
+            user_emp2.id = 2
+            emp2 = Employee(user_id=2, full_name="Employee Two")
+            emp2.id = 2
             
-            user_mgr = User(id=3, username="manager", password_hash=generate_password_hash("pass"), role="manager")
-            user_fin = User(id=4, username="finance", password_hash=generate_password_hash("pass"), role="finance_admin")
+            user_mgr = User(username="manager", password_hash=generate_password_hash("pass"), role="manager")
+            user_mgr.id = 3
+            user_fin = User(username="finance", password_hash=generate_password_hash("pass"), role="finance_admin")
+            user_fin.id = 4
             
             db.session.add_all([user_emp1, emp1, user_emp2, emp2, user_mgr, user_fin])
             
             from datetime import date
             
             # Setup claim for emp1
-            claim = ExpenseClaim(id=1, employee_id=1, title="Emp1 Claim", status="draft", total_amount=100.0)
-            item = ExpenseItem(id=1, claim_id=1, category_id=1, description="Test", amount=100.0, expense_date=date(2026, 1, 1))
-            receipt = ExpenseReceipt(id=1, item_id=1, filename="test.pdf", file_path="/fake/test.pdf")
+            claim = ExpenseClaim(employee_id=1, title="Emp1 Claim", status="draft", total_amount=100.0)
+            claim.id = 1
+            item = ExpenseItem(claim_id=1, category_id=1, description="Test", amount=100.0, expense_date=date(2026, 1, 1))
+            item.id = 1
+            receipt = ExpenseReceipt(item_id=1, filename="test.pdf", file_path="/fake/test.pdf")
+            receipt.id = 1
             db.session.add_all([claim, item, receipt])
             
             db.session.commit()

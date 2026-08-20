@@ -20,6 +20,25 @@ class ExpenseClaim(db.Model):
     approval_history = db.relationship("ApprovalHistory", back_populates="claim")
     reimbursement = db.relationship("Reimbursement", back_populates="claim", uselist=False)
 
+    def __init__(self, employee_id=None, travel_request_id=None, title=None, description=None, total_amount=0.0, status="draft", submitted_at=None, created_at=None, **kwargs):
+        super().__init__(**kwargs)
+        if employee_id is not None:
+            self.employee_id = employee_id
+        if travel_request_id is not None:
+            self.travel_request_id = travel_request_id
+        if title is not None:
+            self.title = title
+        if description is not None:
+            self.description = description
+        if total_amount is not None:
+            self.total_amount = total_amount
+        if status is not None:
+            self.status = status
+        if submitted_at is not None:
+            self.submitted_at = submitted_at
+        if created_at is not None:
+            self.created_at = created_at
+
     def to_dict(self):
         return {
             "id": self.id,

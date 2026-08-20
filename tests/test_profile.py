@@ -12,7 +12,8 @@ def employee_service(employee_dao_mock):
     return EmployeeService(employee_dao_mock)
 
 def test_update_profile(employee_service, employee_dao_mock):
-    mock_emp = Employee(id=1, full_name="Old Name", department="Old Dept", designation="Old Desig", phone="123")
+    mock_emp = Employee(full_name="Old Name", department="Old Dept", designation="Old Desig", phone="123", user_id=1)
+    mock_emp.id = 1
     employee_dao_mock.get_by_id.return_value = mock_emp
     employee_dao_mock.save.return_value = mock_emp
     

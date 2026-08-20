@@ -11,6 +11,12 @@ class User(db.Model):
 
     employee = db.relationship("Employee", back_populates="user", uselist=False)
 
+    def __init__(self, username, password_hash, role, is_active=True):
+        self.username = username
+        self.password_hash = password_hash
+        self.role = role
+        self.is_active = is_active
+
     def to_dict(self):
         return {
             "id": self.id,
