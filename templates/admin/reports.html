@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}System Reports - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>System Reports</h1>
+    <p>Analytics on expenses and claims across the organization</p>
+</div>
+
+<div style="display:flex; gap:20px; flex-wrap:wrap">
+    
+    <!-- Expenses by Category -->
+    <div class="card" style="flex:1; min-width:300px">
+        <h2>Total Expenses by Category</h2>
+        {% if cat_data %}
+        <table>
+            <thead>
+                <tr><th>Category</th><th>Total Amount</th></tr>
+            </thead>
+            <tbody>
+                {% for row in cat_data %}
+                <tr>
+                    <td>{{ row.category }}</td>
+                    <td>{{ "%.2f"|format(row.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p style="color:#666">No category data available.</p>
+        {% endif %}
+    </div>
+
+    <!-- Expenses by Department -->
+    <div class="card" style="flex:1; min-width:300px">
+        <h2>Total Expenses by Department</h2>
+        {% if dept_data %}
+        <table>
+            <thead>
+                <tr><th>Department</th><th>Total Amount</th></tr>
+            </thead>
+            <tbody>
+                {% for row in dept_data %}
+                <tr>
+                    <td>{{ row.department }}</td>
+                    <td>{{ "%.2f"|format(row.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p style="color:#666">No department data available.</p>
+        {% endif %}
+    </div>
+
+    <!-- Claims by Status -->
+    <div class="card" style="flex:1; min-width:300px">
+        <h2>Claims by Status</h2>
+        {% if status_data %}
+        <table>
+            <thead>
+                <tr><th>Status</th><th>Count</th></tr>
+            </thead>
+            <tbody>
+                {% for row in status_data %}
+                <tr>
+                    <td><span class="badge badge-{{ row.status }}">{{ row.status }}</span></td>
+                    <td>{{ row.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p style="color:#666">No claims data available.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="mt-16 text-center">
+    <a href="/admin/dashboard" class="btn btn-secondary">Back to Admin Dashboard</a>
+</div>
+{% endblock %}

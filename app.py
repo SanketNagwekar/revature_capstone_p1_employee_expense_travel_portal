@@ -31,6 +31,7 @@ from controller.travel_controller import travel_controller
 from controller.expense_controller import expense_controller
 from controller.manager_controller import manager_controller
 from controller.finance_controller import finance_controller
+from controller.report_controller import report_controller
 app.register_blueprint(auth_controller)
 app.register_blueprint(admin_controller)
 app.register_blueprint(employee_controller)
@@ -38,6 +39,7 @@ app.register_blueprint(travel_controller)
 app.register_blueprint(expense_controller)
 app.register_blueprint(manager_controller)
 app.register_blueprint(finance_controller)
+app.register_blueprint(report_controller)
 
 if __name__ == "__main__":
     with app.app_context():
