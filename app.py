@@ -23,7 +23,9 @@ from models.approval_history import ApprovalHistory
 from models.reimbursement import Reimbursement
 
 from controller.auth_controller import auth_controller
+from controller.admin_controller import admin_controller
 app.register_blueprint(auth_controller)
+app.register_blueprint(admin_controller)
 
 if __name__ == "__main__":
     with app.app_context():
