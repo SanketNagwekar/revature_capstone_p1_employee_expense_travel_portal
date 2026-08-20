@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Process Reimbursement #{{ claim.id }} - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>Process Reimbursement for Claim #{{ claim.id }}</h1>
+    <p>
+        Employee: <strong>{{ claim.employee.full_name if claim.employee else "-" }}</strong>
+        &nbsp;&nbsp; Title: {{ claim.title }}
+        &nbsp;&nbsp; Total: <strong>{{ "%.2f"|format(claim.total_amount) }}</strong>
+    </p>
+</div>
+
+{% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<!-- Claim Items -->
+<div class="card">
+    <h2>Expense Items</h2>
+    {% if claim.expense_items %}
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th><th>Description</th><th>Date</th><th>Amount</th><th>Receipts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in claim.expense_items %}
+            <tr>
+                <td>{{ item.category.name if item.category else "-" }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.expense_date }}</td>
+                <td>{{ "%.2f"|format(item.amount) }}</td>
+                <td>
+                    {% for r in item.receipts %}
+                        <a href="/expense/receipt/{{ r.id }}/download" class="btn btn-secondary btn-sm">{{ r.filename[:20] }}{% if r.filename|length > 20 %}...{% endif %}</a>
+                    {% else %}
+                        <span style="color:#999">None</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="text-align:right; font-weight:bold; margin-top:8px">
+        Total to Reimburse: {{ "%.2f"|format(claim.total_amount) }}
+    </div>
+    {% else %}
+        <p style="color:#666">No items in this claim.</p>
+    {% endif %}
+</div>
+
+<!-- Process Reimbursement Form -->
+<div class="card">
+    <h2>Process Reimbursement</h2>
+    <form method="POST" action="/finance/process/{{ claim.id }}" style="max-width:500px">
+        <div class="form-group">
+            <label>Payment Method</label>
+            <select name="payment_method" required>
+                <option value="">-- Select Payment Method --</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Cash">Cash</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Transaction Reference ID</label>
+            <input type="text" name="transaction_reference" placeholder="e.g. TXN123456789" required>
+        </div>
+        <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea name="notes" placeholder="Any additional notes..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-success" onclick="return confirm('Confirm processing this reimbursement?')">Submit Reimbursement</button>
+        <a href="/finance/dashboard" class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
+    </form>
+</div>
+
+<!-- Approval History -->
+{% if history %}
+<div class="card">
+    <h2>Approval History</h2>
+    <table>
+        <thead>
+            <tr><th>Action</th><th>By</th><th>Comments</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for h in history %}
+            <tr>
+                <td><span class="badge badge-{{ h.action }}">{{ h.action }}</span></td>
+                <td>{{ h.reviewer.username if h.reviewer else "-" }}</td>
+                <td>{{ h.comments or "-" }}</td>
+                <td>{{ h.action_date.strftime("%d %b %Y %H:%M") }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}
