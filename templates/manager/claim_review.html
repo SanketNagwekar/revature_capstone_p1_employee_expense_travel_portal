@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Review Claim #{{ claim.id }} - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>{{ claim.title }}</h1>
+    <p>
+        Employee: <strong>{{ claim.employee.full_name if claim.employee else "-" }}</strong>
+        &nbsp;&nbsp; Status: <span class="badge badge-{{ claim.status }}">{{ claim.status }}</span>
+        &nbsp;&nbsp; Total: <strong>{{ "%.2f"|format(claim.total_amount) }}</strong>
+    </p>
+</div>
+
+<!-- Claim Items -->
+<div class="card">
+    <h2>Expense Items</h2>
+    {% if claim.expense_items %}
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th><th>Description</th><th>Date</th><th>Amount</th><th>Receipts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in claim.expense_items %}
+            <tr>
+                <td>{{ item.category.name if item.category else "-" }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.expense_date }}</td>
+                <td>{{ "%.2f"|format(item.amount) }}</td>
+                <td>
+                    {% for r in item.receipts %}
+                        <a href="/expense/receipt/{{ r.id }}/download" class="btn btn-secondary btn-sm">{{ r.filename[:20] }}{% if r.filename|length > 20 %}...{% endif %}</a>
+                    {% else %}
+                        <span style="color:#999">None</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="text-align:right; font-weight:bold; margin-top:8px">
+        Total: {{ "%.2f"|format(claim.total_amount) }}
+    </div>
+    {% else %}
+        <p style="color:#666">No items in this claim.</p>
+    {% endif %}
+</div>
+
+<!-- Approve / Reject -->
+{% if claim.status == "submitted" %}
+<div class="card">
+    <h2>Action</h2>
+    <div style="display:flex; gap:20px; flex-wrap:wrap">
+        <form method="POST" action="/manager/claims/{{ claim.id }}/approve" style="flex:1; min-width:240px">
+            <div class="form-group">
+                <label>Comments (optional)</label>
+                <textarea name="comments" placeholder="Approval notes..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-success" onclick="return confirm('Approve this claim?')">Approve Claim</button>
+        </form>
+        <form method="POST" action="/manager/claims/{{ claim.id }}/reject" style="flex:1; min-width:240px">
+            <div class="form-group">
+                <label>Reason for Rejection</label>
+                <textarea name="comments" placeholder="Explain why you are rejecting..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Reject this claim?')">Reject Claim</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Approval History -->
+{% if history %}
+<div class="card">
+    <h2>Approval History</h2>
+    <table>
+        <thead>
+            <tr><th>Action</th><th>By</th><th>Comments</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for h in history %}
+            <tr>
+                <td><span class="badge badge-{{ h.action }}">{{ h.action }}</span></td>
+                <td>{{ h.reviewer.username if h.reviewer else "-" }}</td>
+                <td>{{ h.comments or "-" }}</td>
+                <td>{{ h.action_date.strftime("%d %b %Y %H:%M") }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="mt-16">
+    <a href="/manager/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}

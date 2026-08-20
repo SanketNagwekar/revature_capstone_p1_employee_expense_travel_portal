@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Manager Dashboard - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>Manager Dashboard</h1>
+    <p>Review and action pending expense claims and travel requests</p>
+</div>
+
+{% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<!-- ── Pending Expense Claims ── -->
+<div class="card">
+    <h2>Pending Expense Claims
+        <span style="background:#1a3c5e; color:white; border-radius:12px; padding:2px 10px; font-size:0.85rem; margin-left:8px">{{ pending_claims|length }}</span>
+    </h2>
+
+    {% if pending_claims %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Employee</th>
+                <th>Title</th>
+                <th>Total Amount</th>
+                <th>Submitted On</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in pending_claims %}
+            <tr>
+                <td>{{ c.id }}</td>
+                <td>{{ c.employee.full_name if c.employee else "-" }}</td>
+                <td><a href="/manager/claims/{{ c.id }}">{{ c.title }}</a></td>
+                <td>{{ "%.2f"|format(c.total_amount) }}</td>
+                <td>{{ c.submitted_at.strftime("%d %b %Y") if c.submitted_at else "-" }}</td>
+                <td>
+                    <form method="POST" action="/manager/claims/{{ c.id }}/approve" style="display:inline">
+                        <input type="text" name="comments" placeholder="Comments (optional)" style="width:160px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:0.85rem">
+                        <button class="btn btn-success btn-sm" type="submit" onclick="return confirm('Approve this claim?')">Approve</button>
+                    </form>
+                    <form method="POST" action="/manager/claims/{{ c.id }}/reject" style="display:inline; margin-left:4px">
+                        <input type="text" name="comments" placeholder="Reason for rejection" style="width:160px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:0.85rem">
+                        <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Reject this claim?')">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="color:#666">No pending expense claims.</p>
+    {% endif %}
+</div>
+
+<!-- ── Pending Travel Requests ── -->
+<div class="card">
+    <h2>Pending Travel Requests
+        <span style="background:#1a3c5e; color:white; border-radius:12px; padding:2px 10px; font-size:0.85rem; margin-left:8px">{{ pending_travel|length }}</span>
+    </h2>
+
+    {% if pending_travel %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Employee</th>
+                <th>Destination</th>
+                <th>Purpose</th>
+                <th>Travel Date</th>
+                <th>Return Date</th>
+                <th>Est. Cost</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tr in pending_travel %}
+            <tr>
+                <td>{{ tr.id }}</td>
+                <td>{{ tr.employee.full_name if tr.employee else "-" }}</td>
+                <td>{{ tr.destination }}</td>
+                <td>{{ tr.purpose[:50] }}{% if tr.purpose|length > 50 %}...{% endif %}</td>
+                <td>{{ tr.travel_date }}</td>
+                <td>{{ tr.return_date }}</td>
+                <td>{{ "%.2f"|format(tr.estimated_cost) if tr.estimated_cost else "-" }}</td>
+                <td>
+                    <form method="POST" action="/manager/travel/{{ tr.id }}/approve" style="display:inline">
+                        <button class="btn btn-success btn-sm" type="submit" onclick="return confirm('Approve this travel request?')">Approve</button>
+                    </form>
+                    <form method="POST" action="/manager/travel/{{ tr.id }}/reject" style="display:inline; margin-left:4px">
+                        <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Reject this travel request?')">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="color:#666">No pending travel requests.</p>
+    {% endif %}
+</div>
+{% endblock %}
