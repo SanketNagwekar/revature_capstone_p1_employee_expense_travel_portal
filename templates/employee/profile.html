@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}My Profile - Expense Portal{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>My Profile</h1>
+    <p>Update your personal and organizational details</p>
+</div>
+
+<div class="card" style="max-width:600px; margin:auto">
+    {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/employee/profile">
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" name="full_name" value="{{ employee.full_name }}" required>
+        </div>
+        <div class="form-group">
+            <label>Department</label>
+            <input type="text" name="department" value="{{ employee.department or '' }}" required>
+        </div>
+        <div class="form-group">
+            <label>Designation</label>
+            <input type="text" name="designation" value="{{ employee.designation or '' }}" required>
+        </div>
+        <div class="form-group">
+            <label>Phone</label>
+            <input type="text" name="phone" value="{{ employee.phone or '' }}" required>
+        </div>
+        <div style="margin-top:20px;">
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+            <a href="/employee/dashboard" class="btn btn-secondary" style="margin-left:10px">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

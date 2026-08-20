@@ -12,8 +12,8 @@ class ExpenseService:
         self.receipt_dao = receipt_dao
         self.history_dao = history_dao
 
-    def get_by_employee(self, employee_id):
-        return self.claim_dao.get_by_employee(employee_id)
+    def get_by_employee(self, employee_id, search_term=None):
+        return self.claim_dao.get_by_employee(employee_id, search_term)
 
     def get_all(self):
         return self.claim_dao.get_all()
@@ -39,8 +39,10 @@ class ExpenseService:
         )
         return self.claim_dao.save(claim)
 
-    def add_item(self, claim_id, category_id, description, amount, expense_date):
+    def add_item(self, claim_id, category_id, description, amount, expense_date, employee_id):
         claim = self.get_by_id(claim_id)
+        if claim.employee_id != employee_id:
+            raise ValueError("Unauthorized")
         if claim.status not in ("draft",):
             raise ValueError("Items can only be added to draft claims")
         if amount <= 0:
@@ -63,11 +65,13 @@ class ExpenseService:
         self.claim_dao.save(claim)
         return saved_item
 
-    def delete_item(self, item_id):
+    def delete_item(self, item_id, employee_id):
         item = self.item_dao.get_by_id(item_id)
         if item is None:
             raise ValueError("Item not found")
         claim = self.claim_dao.get_by_id(item.claim_id)
+        if claim.employee_id != employee_id:
+            raise ValueError("Unauthorized")
         self.item_dao.delete(item)
         claim.total_amount = sum(i.amount for i in claim.expense_items)
         self.claim_dao.save(claim)
@@ -118,10 +122,12 @@ class ExpenseService:
     def get_history(self, claim_id):
         return self.history_dao.get_by_claim(claim_id)
 
-    def upload_receipt(self, item_id, filename, file_path):
+    def upload_receipt(self, item_id, filename, file_path, employee_id):
         item = self.item_dao.get_by_id(item_id)
         if item is None:
             raise ValueError("Expense item not found")
+        if item.claim.employee_id != employee_id:
+            raise ValueError("Unauthorized")
         receipt = ExpenseReceipt(item_id=item_id, filename=filename, file_path=file_path)
         return self.receipt_dao.save(receipt)
 
@@ -134,10 +140,12 @@ class ExpenseService:
             raise ValueError("Receipt not found")
         return receipt
 
-    def delete_receipt(self, receipt_id):
+    def delete_receipt(self, receipt_id, employee_id):
         receipt = self.receipt_dao.get_by_id(receipt_id)
         if receipt is None:
             raise ValueError("Receipt not found")
+        if receipt.item.claim.employee_id != employee_id:
+            raise ValueError("Unauthorized")
         import os
         if os.path.exists(receipt.file_path):
             os.remove(receipt.file_path)

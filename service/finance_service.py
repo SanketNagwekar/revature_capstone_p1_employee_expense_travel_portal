@@ -27,7 +27,8 @@ class FinanceService:
             amount=claim.total_amount,
             payment_method=payment_method,
             transaction_reference=transaction_reference,
-            notes=notes
+            notes=notes,
+            processed_by=finance_user_id
         )
         self.reimbursement_dao.save(reimbursement)
 

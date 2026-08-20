@@ -19,6 +19,9 @@
                 <option value="rejected"    {% if status_filter == "rejected" %}selected{% endif %}>Rejected</option>
                 <option value="reimbursed"  {% if status_filter == "reimbursed" %}selected{% endif %}>Reimbursed</option>
             </select>
+            
+            <input type="text" name="search" placeholder="Search claims..." value="{{ search_term }}" style="padding:6px 10px; border:1px solid #ccc; border-radius:4px; margin-left:10px;">
+            <button type="submit" class="btn btn-secondary btn-sm" style="padding:6px 12px;">Search</button>
         </form>
         <a href="/expense/new" class="btn btn-primary">+ New Claim</a>
     </div>

@@ -44,3 +44,25 @@ def dashboard():
         recent_travel=recent_travel,
         recent_claims=recent_claims
     )
+
+@employee_controller.route("/profile", methods=["GET", "POST"])
+@role_required("employee")
+def profile():
+    employee_id = session.get("employee_id")
+    employee = employee_service.get_by_id(employee_id)
+    
+    from flask import request, redirect
+    if request.method == "GET":
+        return render_template("employee/profile.html", employee=employee)
+        
+    # POST
+    full_name = request.form.get("full_name")
+    department = request.form.get("department")
+    designation = request.form.get("designation")
+    phone = request.form.get("phone")
+    
+    try:
+        employee_service.update_profile(employee_id, full_name, department, designation, phone)
+        return redirect("/employee/dashboard")
+    except ValueError as e:
+        return render_template("employee/profile.html", employee=employee, error=str(e))

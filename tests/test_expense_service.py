@@ -33,7 +33,7 @@ def expense_service(claim_dao_mock, item_dao_mock, policy_dao_mock, receipt_dao_
 
 def test_add_item_within_policy(expense_service, claim_dao_mock, item_dao_mock, policy_dao_mock):
     # Mock draft claim
-    mock_claim = ExpenseClaim(id=1, status="draft", expense_items=[])
+    mock_claim = ExpenseClaim(id=1, status="draft", employee_id=5, expense_items=[])
     claim_dao_mock.get_by_id.return_value = mock_claim
     
     # Mock policy
@@ -50,7 +50,8 @@ def test_add_item_within_policy(expense_service, claim_dao_mock, item_dao_mock, 
         category_id=2,
         description="Lunch",
         amount=50.0,
-        expense_date=date(2026, 8, 20)
+        expense_date=date(2026, 8, 20),
+        employee_id=5
     )
     
     assert item.id == 1
@@ -58,7 +59,7 @@ def test_add_item_within_policy(expense_service, claim_dao_mock, item_dao_mock, 
     claim_dao_mock.save.assert_called_once() # Updates total_amount
 
 def test_add_item_exceeds_policy(expense_service, claim_dao_mock, policy_dao_mock):
-    mock_claim = ExpenseClaim(id=1, status="draft", expense_items=[])
+    mock_claim = ExpenseClaim(id=1, status="draft", employee_id=5, expense_items=[])
     claim_dao_mock.get_by_id.return_value = mock_claim
     
     mock_policy = ExpensePolicy(category_id=2, max_amount=100.0)
@@ -70,8 +71,32 @@ def test_add_item_exceeds_policy(expense_service, claim_dao_mock, policy_dao_moc
             category_id=2,
             description="Fancy Dinner",
             amount=150.0,
-            expense_date=date(2026, 8, 20)
+            expense_date=date(2026, 8, 20),
+            employee_id=5
         )
+
+def test_add_item_unauthorized(expense_service, claim_dao_mock):
+    mock_claim = ExpenseClaim(id=1, status="draft", employee_id=5, expense_items=[])
+    claim_dao_mock.get_by_id.return_value = mock_claim
+    
+    with pytest.raises(ValueError, match="Unauthorized"):
+        expense_service.add_item(
+            claim_id=1,
+            category_id=2,
+            description="Lunch",
+            amount=50.0,
+            expense_date=date(2026, 8, 20),
+            employee_id=999 # Wrong employee
+        )
+
+def test_delete_item_unauthorized(expense_service, item_dao_mock, claim_dao_mock):
+    mock_claim = ExpenseClaim(id=1, employee_id=5)
+    mock_item = ExpenseItem(id=1, claim_id=1)
+    item_dao_mock.get_by_id.return_value = mock_item
+    claim_dao_mock.get_by_id.return_value = mock_claim
+    
+    with pytest.raises(ValueError, match="Unauthorized"):
+        expense_service.delete_item(1, employee_id=999)
 
 def test_submit_empty_claim_fails(expense_service, claim_dao_mock):
     mock_claim = ExpenseClaim(id=1, status="draft", employee_id=5, expense_items=[])

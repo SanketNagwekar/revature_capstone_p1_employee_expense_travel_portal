@@ -53,10 +53,11 @@ def new_claim():
 def my_claims():
     employee_id = session.get("employee_id")
     status_filter = request.args.get("status", "")
-    all_claims = expense_service.get_by_employee(employee_id)
+    search_term = request.args.get("search", "")
+    all_claims = expense_service.get_by_employee(employee_id, search_term)
     if status_filter:
         all_claims = [c for c in all_claims if c.status == status_filter]
-    return render_template("employee/my_claims.html", claims=all_claims, status_filter=status_filter)
+    return render_template("employee/my_claims.html", claims=all_claims, status_filter=status_filter, search_term=search_term)
 
 @expense_controller.route("/<int:claim_id>", methods=["GET"])
 @role_required("employee")
@@ -82,7 +83,8 @@ def add_item(claim_id):
             category_id=int(request.form.get("category_id")),
             description=request.form.get("description"),
             amount=float(request.form.get("amount")),
-            expense_date=expense_date
+            expense_date=expense_date,
+            employee_id=session.get("employee_id")
         )
     except ValueError as e:
         claim = expense_service.get_by_id(claim_id)
@@ -95,7 +97,7 @@ def add_item(claim_id):
 @role_required("employee")
 def delete_item(claim_id, item_id):
     try:
-        expense_service.delete_item(item_id)
+        expense_service.delete_item(item_id, session.get("employee_id"))
     except ValueError:
         pass
     return redirect(f"/expense/{claim_id}")
@@ -137,7 +139,7 @@ def upload_receipt(claim_id, item_id):
     file.save(file_path)
 
     try:
-        expense_service.upload_receipt(item_id, file.filename, file_path)
+        expense_service.upload_receipt(item_id, file.filename, file_path, session.get("employee_id"))
     except ValueError as e:
         os.remove(file_path)
         claim = expense_service.get_by_id(claim_id)
@@ -153,6 +155,9 @@ def upload_receipt(claim_id, item_id):
 def download_receipt(receipt_id):
     try:
         receipt = expense_service.get_receipt_by_id(receipt_id)
+        if session.get("role") == "employee":
+            if receipt.item.claim.employee_id != session.get("employee_id"):
+                return redirect("/employee/dashboard")
     except ValueError:
         return redirect("/login")
 
@@ -165,7 +170,7 @@ def download_receipt(receipt_id):
 @role_required("employee")
 def delete_receipt(claim_id, receipt_id):
     try:
-        expense_service.delete_receipt(receipt_id)
+        expense_service.delete_receipt(receipt_id, session.get("employee_id"))
     except ValueError:
         pass
     return redirect(f"/expense/{claim_id}")
