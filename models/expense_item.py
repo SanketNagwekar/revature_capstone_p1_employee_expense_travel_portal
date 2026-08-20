@@ -12,7 +12,7 @@ class ExpenseItem(db.Model):
 
     claim = db.relationship("ExpenseClaim", back_populates="expense_items")
     category = db.relationship("ExpenseCategory", back_populates="expense_items")
-    receipts = db.relationship("ExpenseReceipt", back_populates="item")
+    receipts = db.relationship("ExpenseReceipt", back_populates="item", cascade="all, delete-orphan")
 
     def __init__(self, claim_id=None, category_id=None, description=None, amount=None, expense_date=None, **kwargs):
         super().__init__(**kwargs)

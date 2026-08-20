@@ -11,8 +11,8 @@ class Employee(db.Model):
     phone = db.Column(db.String(20))
 
     user = db.relationship("User", back_populates="employee")
-    travel_requests = db.relationship("TravelRequest", back_populates="employee")
-    expense_claims = db.relationship("ExpenseClaim", back_populates="employee")
+    travel_requests = db.relationship("TravelRequest", back_populates="employee", cascade="all, delete-orphan")
+    expense_claims = db.relationship("ExpenseClaim", back_populates="employee", cascade="all, delete-orphan")
 
     def __init__(self, user_id, full_name, department=None, designation=None, phone=None):
         self.user_id = user_id

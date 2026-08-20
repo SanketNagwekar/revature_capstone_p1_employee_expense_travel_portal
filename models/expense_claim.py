@@ -13,12 +13,12 @@ class ExpenseClaim(db.Model):
     status = db.Column(db.String(50), default="draft")  # draft, submitted, approved, rejected, reimbursed
     submitted_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    
     employee = db.relationship("Employee", back_populates="expense_claims")
     travel_request = db.relationship("TravelRequest", back_populates="expense_claims")
-    expense_items = db.relationship("ExpenseItem", back_populates="claim")
-    approval_history = db.relationship("ApprovalHistory", back_populates="claim")
-    reimbursement = db.relationship("Reimbursement", back_populates="claim", uselist=False)
+    expense_items = db.relationship("ExpenseItem", back_populates="claim", cascade="all, delete-orphan")
+    approval_history = db.relationship("ApprovalHistory", back_populates="claim", cascade="all, delete-orphan")
+    reimbursement = db.relationship("Reimbursement", back_populates="claim", uselist=False, cascade="all, delete-orphan")
 
     def __init__(self, employee_id=None, travel_request_id=None, title=None, description=None, total_amount=0.0, status="draft", submitted_at=None, created_at=None, **kwargs):
         super().__init__(**kwargs)

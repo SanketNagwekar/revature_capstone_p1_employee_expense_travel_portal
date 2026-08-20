@@ -9,7 +9,7 @@ class User(db.Model):
     role = db.Column(db.String(50), nullable=False)  # employee, manager, finance_admin, system_admin
     is_active = db.Column(db.Boolean, default=True)
 
-    employee = db.relationship("Employee", back_populates="user", uselist=False)
+    employee = db.relationship("Employee", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __init__(self, username, password_hash, role, is_active=True):
         self.username = username
