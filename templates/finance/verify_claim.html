@@ -73,7 +73,7 @@
                 {% for h in history %}
                 <li>
                     <strong>{{ h.action|capitalize }}</strong> by User #{{ h.reviewer_id }}<br>
-                    <small>{{ h.created_at.strftime("%d %b %Y %H:%M") }}</small>
+                    <small>{{ h.action_date.strftime("%d %b %Y %H:%M") }}</small>
                     {% if h.comments %}<br><em>"{{ h.comments }}"</em>{% endif %}
                 </li>
                 {% endfor %}
