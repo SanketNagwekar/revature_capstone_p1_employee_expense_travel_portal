@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Expense Portal{% endblock %}</title>
+    <title>{% block title %}Expense360 – Reimbursement Portal{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -11,7 +11,10 @@
 
 {% if session.user_id %}
 <nav class="navbar">
-    <a class="brand" href="/">Expense & Travel Portal</a>
+    <div style="display:flex; flex-direction:column;">
+        <a class="brand" href="/" style="margin-bottom:2px;">Expense360 – Reimbursement Portal</a>
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 500; letter-spacing: 0.2px;">Your Expenses, Simplified 360°</span>
+    </div>
     <div class="nav-links">
         {% if session.role == "employee" %}
             <a href="/employee/dashboard">Dashboard</a>

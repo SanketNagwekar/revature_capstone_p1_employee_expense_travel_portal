@@ -40,7 +40,7 @@ def test_valid_login(client):
         "username": "testuser",
         "password": "password123"
     }, follow_redirects=True)
-    assert b"Expense & Travel Portal" in response.data
+    assert b"Expense360" in response.data
 
 def test_invalid_username(client):
     response = client.post("/login", data={

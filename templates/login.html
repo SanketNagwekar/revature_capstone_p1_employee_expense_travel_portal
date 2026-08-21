@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Expense Portal{% endblock %}
+{% block title %}Login - Expense360 – Reimbursement Portal{% endblock %}
 
 {% block content %}
 <div class="login-wrapper">
     <div class="login-card">
-        <h1>Expense Portal</h1>
-        <p class="subtitle">Sign in to your account</p>
+        <h1>Expense360<br><span style="font-size:1.1rem; color:#64748b; font-weight:500;">Reimbursement Portal</span></h1>
+        <p class="subtitle" style="font-weight:600; color:#f97316;">Your Expenses, Simplified 360°</p>
+        <p class="subtitle" style="margin-top:-24px;">Sign in to your account</p>
 
         {% if error %}
             <div class="alert alert-error">{{ error }}</div>
