@@ -5,9 +5,12 @@ import os
 load_dotenv()
 
 from config.database import init_db, db
+from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY") # Use same secret for JWT
+jwt = JWTManager(app)
 
 init_db(app)
 app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(__file__), "static", "uploads")
